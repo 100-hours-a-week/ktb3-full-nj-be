@@ -7,6 +7,7 @@ import com.example.dance_community.entity.User;
 import com.example.dance_community.exception.ConflictException;
 import com.example.dance_community.exception.NotFoundException;
 import com.example.dance_community.repository.UserRepository;
+import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,6 +22,7 @@ public class UserService {
     private final FileStorageService fileStorageService;
     private final PostService postService;
     private final ClubJoinService clubJoinService;
+    private final EntityManager em;
 
     @Transactional
     public UserResponse createUser(String email, String password, String nickname, String profileImage) {
@@ -38,19 +40,16 @@ public class UserService {
                 .profileImage(profileImage)
                 .build();
 
-        userRepository.save(user);
-        return UserResponse.from(user);
+        return UserResponse.from(userRepository.save(user));
     }
 
     public UserResponse getUser(Long userId) {
-        User user = this.findByUserId(userId);
-        return UserResponse.from(user);
+        return UserResponse.from(findByUserId(userId));
     }
 
     @Transactional
     public UserResponse updateUser(Long userId, UserUpdateRequest request) {
         validateNickname(request.getNickname(), userId);
-
         User user = this.findByUserId(userId);
         String currentProfileImage = user.getProfileImage();
 
@@ -65,8 +64,7 @@ public class UserService {
                 request.getProfileImage() == null ? user.getProfileImage() : request.getProfileImage()
         );
 
-        User savedUser = userRepository.save(user);
-        return UserResponse.from(savedUser);
+        return UserResponse.from(userRepository.save(user));
     }
 
     @Transactional
@@ -105,6 +103,9 @@ public class UserService {
         postService.softDeleteByUserId(userId);
         clubJoinService.softDeleteByUserId(userId);
         user.delete();
+
+        em.flush();
+        em.clear();
     }
 
     public boolean matchesPassword(User user, String rawPassword) {

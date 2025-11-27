@@ -10,33 +10,37 @@ import com.example.dance_community.exception.ConflictException;
 import com.example.dance_community.exception.InvalidRequestException;
 import com.example.dance_community.exception.NotFoundException;
 import com.example.dance_community.repository.ClubJoinRepository;
-import jakarta.transaction.Transactional;
+import com.example.dance_community.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ClubJoinService {
     private final ClubJoinRepository clubJoinRepository;
-    private final UserService userService;
+    private final UserRepository userRepository;
     private final ClubAuthService clubAuthService;
 
     // 일반 사용자용
     @Transactional
     public ClubJoinResponse applyToClub(Long userId, Long clubId) {
         ClubJoin clubJoin = clubJoinRepository.findByUser_UserIdAndClub_ClubId(userId, clubId);
-        if (clubJoin != null && (clubJoin.getStatus() == ClubJoinStatus.PENDING || clubJoin.getStatus() == ClubJoinStatus.ACTIVE)) {
-            throw new ConflictException("이미 가입 신청한 클럽입니다.");
-        }
 
-        if(clubJoin != null && (clubJoin.getStatus() == ClubJoinStatus.CANCELED || clubJoin.getStatus() == ClubJoinStatus.LEFT)) {
+        if (clubJoin != null) {
+            if (clubJoin.getStatus() == ClubJoinStatus.PENDING || clubJoin.getStatus() == ClubJoinStatus.ACTIVE) {
+                throw new ConflictException("이미 가입 신청한 클럽입니다.");
+            }
             clubJoin.changeStatus(ClubJoinStatus.PENDING);
+            clubJoin.changeRole(ClubRole.MEMBER);
             return ClubJoinResponse.from(clubJoin);
         }
 
-        User user = userService.findByUserId(userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다"));
         Club club = clubAuthService.findByClubId(clubId);
 
         ClubJoin newClubJoin = ClubJoin.builder()
@@ -46,8 +50,7 @@ public class ClubJoinService {
                 .status(ClubJoinStatus.PENDING)
                 .build();
 
-        ClubJoin savedClubJoin = clubJoinRepository.save(newClubJoin);
-        return ClubJoinResponse.from(savedClubJoin);
+        return ClubJoinResponse.from(clubJoinRepository.save(newClubJoin));
     }
 
     @Transactional
@@ -153,9 +156,11 @@ public class ClubJoinService {
         return clubJoinRepository.existsByUser_UserIdAndClub_ClubId(userId, clubId);
     }
 
+    @Transactional
     public void softDeleteByUserId(Long userId) {
         clubJoinRepository.softDeleteByUserId(userId, ClubJoinStatus.LEFT);
     }
+    @Transactional
     public void softDeleteByClubId(Long clubId) {
         clubJoinRepository.softDeleteByClubId(clubId, ClubJoinStatus.CANCELED);
     }

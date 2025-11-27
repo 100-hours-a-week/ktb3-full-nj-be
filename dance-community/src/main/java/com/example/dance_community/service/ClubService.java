@@ -7,26 +7,32 @@ import com.example.dance_community.entity.Club;
 import com.example.dance_community.entity.User;
 import com.example.dance_community.enums.ClubJoinStatus;
 import com.example.dance_community.enums.ClubRole;
+import com.example.dance_community.exception.NotFoundException;
 import com.example.dance_community.repository.ClubRepository;
+import com.example.dance_community.repository.UserRepository;
 import jakarta.persistence.EntityManager;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ClubService {
     private final ClubRepository clubRepository;
-    private final UserService userService;
+    private final UserRepository userRepository;
     private final ClubAuthService clubAuthService;
+    private final ClubJoinService clubJoinService;
+    private final PostService postService;
     private final FileStorageService fileStorageService;
     private final EntityManager em;
 
     @Transactional
     public ClubResponse createClub(Long userId, ClubCreateRequest request) {
-        User user = userService.findByUserId(userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다"));
 
         Club club = Club.builder()
                 .clubName(request.getClubName())
@@ -39,18 +45,14 @@ public class ClubService {
                 .build();
 
         club.addMember(user, ClubRole.LEADER, ClubJoinStatus.ACTIVE);
-        Club newClub = clubRepository.save(club);
-        return ClubResponse.from(newClub);
+        return ClubResponse.from(clubRepository.save(club));
     }
 
     public ClubResponse getClub(Long clubId) {
-        Club club = clubAuthService.findByClubId(clubId);
-        return ClubResponse.from(club);
+        return ClubResponse.from(clubAuthService.findByClubId(clubId));
     }
-
     public List<ClubResponse> getClubs() {
-        List<Club> clubs = clubRepository.findAll();
-        return clubs.stream().map(ClubResponse::from).toList();
+        return clubRepository.findAll().stream().map(ClubResponse::from).toList();
     }
 
     @Transactional
@@ -59,17 +61,12 @@ public class ClubService {
         Club club = clubAuthService.findByClubId(clubId);
 
         club.updateClub(
-                request.getClubName(),
-                request.getIntro(),
-                request.getDescription(),
-                request.getLocationName(),
-                request.getClubType(),
-                request.getClubImage(),
-                request.getTags()
+                request.getClubName(), request.getIntro(), request.getDescription(),
+                request.getLocationName(), request.getClubType(),
+                request.getClubImage(), request.getTags()
         );
 
-        Club savedClub = clubRepository.save(club);
-        return ClubResponse.from(savedClub);
+        return ClubResponse.from(clubRepository.save(club));
     }
 
     @Transactional
@@ -81,22 +78,21 @@ public class ClubService {
             fileStorageService.deleteFile(club.getClubImage());
             club.deleteImage();
         }
-
-        Club savedClub = clubRepository.save(club);
-        return ClubResponse.from(savedClub);
+        return ClubResponse.from(clubRepository.save(club));
     }
 
     @Transactional
     public void deleteClub(Long userId, Long clubId) {
         clubAuthService.validateLeaderAuthority(userId, clubId);
         Club club = clubAuthService.findByClubId(clubId);
-        User user = userService.findByUserId(userId);
 
         if (club.getClubImage() != null) {
             fileStorageService.deleteFile(club.getClubImage());
         }
 
-        club.removeMember(user);
+        clubJoinService.softDeleteByClubId(clubId);
+        postService.softDeleteByClubId(clubId);
+
         club.delete();
 
         em.flush();

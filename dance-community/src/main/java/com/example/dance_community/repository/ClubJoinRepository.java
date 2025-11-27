@@ -18,11 +18,11 @@ public interface ClubJoinRepository extends JpaRepository<ClubJoin, Long> {
     ClubJoin findByUser_UserIdAndClub_ClubId(Long userId, Long clubId);
     boolean existsByUser_UserIdAndClub_ClubId(Long userId, Long clubId);
 
-    @Modifying(clearAutomatically = true)
+    @Modifying()
     @Query("UPDATE ClubJoin cj SET cj.status = :status WHERE cj.user.userId = :userId")
     void softDeleteByUserId(@Param("userId") Long userId, @Param("status") ClubJoinStatus status);
 
-    @Modifying(clearAutomatically = true)
+    @Modifying()
     @Query("UPDATE ClubJoin cj SET cj.status = :status WHERE cj.club.clubId = :clubId")
     void softDeleteByClubId(@Param("clubId") Long clubId, @Param("status") ClubJoinStatus status);
 }

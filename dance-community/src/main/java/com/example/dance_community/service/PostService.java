@@ -11,9 +11,10 @@ import com.example.dance_community.exception.AccessDeniedException;
 import com.example.dance_community.exception.InvalidRequestException;
 import com.example.dance_community.exception.NotFoundException;
 import com.example.dance_community.repository.PostRepository;
-import jakarta.transaction.Transactional;
+import com.example.dance_community.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,22 +22,22 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class PostService {
     private final PostRepository postRepository;
-    private final UserService userService;
+    private final UserRepository userRepository;
     private final ClubAuthService clubAuthService;
     private final FileStorageService fileStorageService;
 
     @Transactional
     public PostResponse createPost(Long userId, PostCreateRequest request) {
-        User author = userService.findByUserId(userId);
+        User author = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다"));
 
         Club club = null;
         if (Scope.CLUB.toString().equals(request.getScope())) {
             Long clubId = request.getClubId();
-            if (clubId == null) {
-                throw new InvalidRequestException("공개 범위가 CLUB일 경우 clubId가 필요");
-            }
+            if (clubId == null) throw new InvalidRequestException("공개 범위가 CLUB일 경우 clubId가 필요");
             club = clubAuthService.findByClubId(clubId);
         }
 
@@ -50,43 +51,32 @@ public class PostService {
                 .images(request.getImages())
                 .build();
 
-        Post newPost = postRepository.save(post);
-        return PostResponse.from(newPost);
+        return PostResponse.from(postRepository.save(post));
     }
 
     public PostResponse getPost(Long postId) {
-        Post post = getActivePost(postId);
-        return PostResponse.from(post);
+        return PostResponse.from(getActivePost(postId));
     }
-
     public List<PostResponse> getPosts() {
-        List<Post> posts = postRepository.findAll();
-        return posts.stream().map(PostResponse::from).toList();
+        return postRepository.findAll().stream().map(PostResponse::from).toList();
     }
 
     @Transactional
     public PostResponse updatePost(Long postId, Long userId, PostUpdateRequest request) {
         Post post = getActivePost(postId);
 
-        if (!post.getAuthor().getUserId().equals(userId)) {
-            System.out.println("**************************************"+userId);
-            throw new AccessDeniedException("수정 권한이 없습니다");
-        }
+        checkAuthor(userId, post);
 
-        post.updatePost(
-                request.getTitle(),
-                request.getContent(),
-                request.getTags()
-        );
-
+        post.updatePost(request.getTitle(), request.getContent(), request.getTags());
         handleImageUpdate(post, request.getNewImagePaths(), request.getKeepImages());
 
         return PostResponse.from(post);
     }
 
     @Transactional
-    public void deletePost(Long postId) {
-        Post post = this.getActivePost(postId);
+    public void deletePost(Long userId, Long postId) {
+        Post post = getActivePost(postId);
+        checkAuthor(userId, post);
         post.delete();
     }
 
@@ -94,7 +84,11 @@ public class PostService {
         return postRepository.findById(postId)
                 .orElseThrow(() -> new NotFoundException("게시물을 찾을 수 없습니다"));
     }
-
+    private void checkAuthor(Long userId, Post post) {
+        if (!post.getAuthor().getUserId().equals(userId)) {
+            throw new AccessDeniedException("수정 권한이 없습니다");
+        }
+    }
     private void handleImageUpdate(Post post, List<String> newImages, List<String> keepImages) {
         // keepImages가 null이면 이미지 변경 안 함
         if (keepImages == null) {
@@ -148,9 +142,11 @@ public class PostService {
         System.out.println("최종 이미지: " + finalImages.size() + "개");
     }
 
+    @Transactional
     public void softDeleteByUserId(Long userId) {
         postRepository.softDeleteByUserId(userId);
     }
+    @Transactional
     public void softDeleteByClubId(Long clubId) {
         postRepository.softDeleteByClubId(clubId);
     }

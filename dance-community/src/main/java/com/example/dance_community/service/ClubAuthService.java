@@ -9,9 +9,11 @@ import com.example.dance_community.repository.ClubJoinRepository;
 import com.example.dance_community.repository.ClubRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ClubAuthService {
     private final ClubRepository clubRepository;
     private final ClubJoinRepository clubJoinRepository;

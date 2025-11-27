@@ -11,11 +11,11 @@ import java.util.List;
 
 @Repository
 public interface PostRepository extends JpaRepository<Post, Long> {
-    @Modifying(clearAutomatically = true)
+    @Modifying()
     @Query("UPDATE Post p SET p.isDeleted = true WHERE p.author.userId = :userId")
     void softDeleteByUserId(@Param("userId") Long userId);
 
-    @Modifying
-    @Query("update Post p set p.isDeleted = true where p.club.clubId = :clubId")
-    int softDeleteByClubId(@Param("clubId") Long clubId);
+    @Modifying()
+    @Query("UPDATE Post p SET p.isDeleted = true WHERE p.club.clubId = :clubId")
+    void softDeleteByClubId(@Param("clubId") Long clubId);
 }
