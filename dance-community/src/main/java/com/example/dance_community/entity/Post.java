@@ -61,9 +61,6 @@ public class Post extends BaseEntity{
     @Column(name = "image")
     private List<String> images = new ArrayList<>();
 
-    // 수정 일시
-    private LocalDateTime updatedAt;
-
     // CREATE
     @Builder
     private Post(User author, Scope scope, Club club, String title, String content, List<String> tags, List<String> images) {
@@ -91,7 +88,6 @@ public class Post extends BaseEntity{
         this.title = title;
         this.content = content;
         this.tags = tags != null ? new ArrayList<>(tags) : new ArrayList<>();
-        this.updatedAt = LocalDateTime.now();
 
         return this;
     }

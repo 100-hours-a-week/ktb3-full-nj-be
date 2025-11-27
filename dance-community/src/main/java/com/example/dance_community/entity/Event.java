@@ -86,9 +86,6 @@ public class Event extends BaseEntity{
     @Column(nullable = false)
     private LocalDateTime endsAt;
 
-    // 수정 일시
-    private LocalDateTime updatedAt;
-
     // CREATE
     @Builder
     private Event(User host, Scope scope, Club club, EventType type,
@@ -135,7 +132,6 @@ public class Event extends BaseEntity{
         this.capacity = capacity;
         this.startsAt = startsAt;
         this.endsAt = endsAt;
-        this.updatedAt = LocalDateTime.now();
 
         return this;
     }
