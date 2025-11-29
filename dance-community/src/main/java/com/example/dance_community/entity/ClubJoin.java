@@ -35,7 +35,7 @@ public class ClubJoin extends BaseEntity{
     private ClubRole role;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 50)
     private ClubJoinStatus status;
 
     // CREATE

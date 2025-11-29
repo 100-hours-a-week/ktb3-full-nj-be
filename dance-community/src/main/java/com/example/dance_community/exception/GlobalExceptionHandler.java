@@ -37,16 +37,9 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
     }
 
-    // 401: 인증 실패 (로그인 필요)
-    @ExceptionHandler(AuthException.class)
-    public ResponseEntity<ProblemDetail> handleAuth(AuthException ex) {
-        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(pd);
-    }
-
-    // 403: 권한 없음 (접근 거부)
-    @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ProblemDetail> handleAccessDenied(AccessDeniedException ex) {
+    // 403: 권한 없음 (AuthException + AccessDeniedException 둘 다 여기서 처리)
+    @ExceptionHandler({AuthException.class, AccessDeniedException.class})
+    public ResponseEntity<ProblemDetail> handleForbidden(RuntimeException ex) {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, ex.getMessage());
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(pd);
     }

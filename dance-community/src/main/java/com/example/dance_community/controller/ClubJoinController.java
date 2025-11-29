@@ -2,6 +2,7 @@ package com.example.dance_community.controller;
 
 import com.example.dance_community.dto.ApiResponse;
 import com.example.dance_community.dto.club.ClubJoinResponse;
+import com.example.dance_community.enums.ClubRole;
 import com.example.dance_community.security.UserDetail;
 import com.example.dance_community.service.ClubJoinService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -102,6 +103,18 @@ public class ClubJoinController {
     ) {
         clubJoinService.rejectApplication(userDetail.getUserId(), clubId, applicantId);
         return ResponseEntity.ok(new ApiResponse<>("가입 신청 거절 성공", null));
+    }
+
+    @Operation(summary = "멤버 역할 변경", description = "멤버의 역할을 변경합니다.")
+    @PatchMapping("/{clubId}/members/{memberId}/role")
+    public ResponseEntity<ApiResponse<Void>> changeMemberRole(
+            @AuthenticationPrincipal UserDetail userDetail,
+            @PathVariable Long clubId,
+            @PathVariable Long memberId,
+            @RequestParam String newRole
+    ) {
+        clubJoinService.changeMemberRole(userDetail.getUserId(), clubId, memberId, ClubRole.valueOf(newRole));
+        return ResponseEntity.ok(new ApiResponse<>("멤버 역할 변경 성공", null));
     }
 
     @Operation(summary = "멤버 추방", description = "멤버를 추방합니다.")

@@ -28,7 +28,9 @@ public class ClubJoinService {
     // 일반 사용자용
     @Transactional
     public ClubJoinResponse applyToClub(Long userId, Long clubId) {
-        ClubJoin clubJoin = clubAuthService.findClubJoin(userId, clubId);
+        ClubJoin clubJoin = clubJoinRepository
+                .findByUser_UserIdAndClub_ClubId(userId, clubId)
+                .orElse(null);
 
         if (clubJoin != null) {
             if (clubJoin.getStatus() == ClubJoinStatus.PENDING || clubJoin.getStatus() == ClubJoinStatus.ACTIVE) {
@@ -80,7 +82,7 @@ public class ClubJoinService {
     }
 
     public List<ClubJoinResponse> getMyClubs(Long userId) {
-        List<ClubJoin> clubJoins = clubJoinRepository.findByUser_UserIdAndStatus(userId, ClubJoinStatus.ACTIVE);
+        List<ClubJoin> clubJoins = clubJoinRepository.findByUser_UserIdAndStatusIn(userId, List.of(ClubJoinStatus.ACTIVE, ClubJoinStatus.PENDING));
         return clubJoins.stream().map(ClubJoinResponse::from).toList();
     }
 
@@ -128,6 +130,21 @@ public class ClubJoinService {
         }
 
         clubJoin.changeStatus(ClubJoinStatus.LEFT);
+    }
+
+    public void changeMemberRole(Long managerId, Long clubId, Long targetUserId, ClubRole newRole) {
+        clubAuthService.validateLeaderAuthority(managerId, clubId);
+
+        ClubJoin clubJoin = clubAuthService.findClubJoin(targetUserId, clubId);
+
+        if (clubJoin.getStatus() != ClubJoinStatus.ACTIVE) {
+            throw new InvalidRequestException("활동 중인 멤버만 역할을 변경할 수 있습니다");
+        }
+        if (clubJoin.getRole() == ClubRole.LEADER) {
+            throw new InvalidRequestException("클럽 리더의 역할은 변경할 수 없습니다");
+        }
+
+        clubJoin.changeRole(newRole);
     }
 
     // 조회용

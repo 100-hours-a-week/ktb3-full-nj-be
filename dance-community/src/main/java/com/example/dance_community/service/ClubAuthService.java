@@ -41,6 +41,6 @@ public class ClubAuthService {
 
     public ClubJoin findClubJoin(Long userId, Long clubId) {
         return clubJoinRepository.findByUser_UserIdAndClub_ClubId(userId, clubId)
-                .orElseThrow(() -> new AuthException("클럽 멤버가 아닙니다"));
+                .orElseThrow(() -> new NotFoundException("가입 정보를 찾을 수 없습니다"));
     }
 }

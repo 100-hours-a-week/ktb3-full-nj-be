@@ -14,7 +14,9 @@ import java.util.Optional;
 @Repository
 public interface ClubJoinRepository extends JpaRepository<ClubJoin, Long> {
     List<ClubJoin> findByClub_ClubIdAndStatus(Long clubId, ClubJoinStatus status);
-    List<ClubJoin> findByUser_UserIdAndStatus(Long userId, ClubJoinStatus status);
+
+
+    List<ClubJoin> findByUser_UserIdAndStatusIn(Long userId, List<ClubJoinStatus> statuses);
 
     Optional<ClubJoin> findByUser_UserIdAndClub_ClubId(Long userId, Long clubId);
     boolean existsByUser_UserIdAndClub_ClubId(Long userId, Long clubId);
