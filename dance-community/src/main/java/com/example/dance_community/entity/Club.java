@@ -5,6 +5,7 @@ import com.example.dance_community.enums.ClubRole;
 import com.example.dance_community.enums.ClubType;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
@@ -51,6 +52,9 @@ public class Club extends BaseEntity{
     @OneToMany(mappedBy = "club", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ClubJoin> members = new ArrayList<>();
 
+    @Formula("(SELECT count(*) FROM club_joins cj WHERE cj.club_id = club_id AND cj.status = 'ACTIVE')")
+    private int memberCount;
+
     @OneToMany(mappedBy = "club", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Post> posts = new ArrayList<>();
 
@@ -75,11 +79,6 @@ public class Club extends BaseEntity{
         this.clubType = clubType;
         this.clubImage = clubImage;
         this.tags = tags != null ? tags : new ArrayList<>();
-    }
-
-    // READ
-    public int getMemberCount() {
-        return members.size();
     }
 
     // UPDATE

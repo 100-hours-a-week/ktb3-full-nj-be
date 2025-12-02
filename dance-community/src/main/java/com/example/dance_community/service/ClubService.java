@@ -9,7 +9,6 @@ import com.example.dance_community.enums.ClubJoinStatus;
 import com.example.dance_community.enums.ClubRole;
 import com.example.dance_community.exception.NotFoundException;
 import com.example.dance_community.repository.ClubRepository;
-import com.example.dance_community.repository.EventRepository;
 import com.example.dance_community.repository.UserRepository;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
