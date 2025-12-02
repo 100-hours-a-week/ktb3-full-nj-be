@@ -2,6 +2,7 @@ package com.example.dance_community.repository;
 
 import com.example.dance_community.entity.Event;
 import jakarta.persistence.LockModeType;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
@@ -9,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -28,4 +30,10 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     @Modifying()
     @Query("UPDATE Event e SET e.isDeleted = true WHERE e.club.clubId = :clubId")
     void softDeleteByClubId(@Param("clubId") Long clubId);
+
+    @Query("SELECT e FROM Event e " +
+            "WHERE e.startsAt > CURRENT_TIMESTAMP " +
+            "AND e.isDeleted = false " +
+            "ORDER BY e.startsAt ASC")
+    List<Event> findUpcomingEvents(Pageable pageable);
 }

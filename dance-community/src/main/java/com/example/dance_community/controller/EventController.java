@@ -100,6 +100,15 @@ public class EventController {
         return ResponseEntity.ok(new ApiResponse<>("행사 전체 조회 성공", eventResponseList));
     }
 
+    @Operation(summary = "[Upcoming Event]", description = "현재 시간 이후 시작하는 행사를 불러옵니다.")
+    @GetMapping("/upcoming")
+    public ResponseEntity<ApiResponse<List<EventResponse>>> getUpcomingEvents(
+            @AuthenticationPrincipal UserDetail userDetail
+    ) {
+        List<EventResponse> eventResponseList = eventService.getUpcomingEvents(userDetail.getUserId());
+        return ResponseEntity.ok(new ApiResponse<>("Upcoming Event 조회 성공", eventResponseList));
+    }
+
     @Operation(summary = "행사 수정", description = "사용자의 행사 정보를 수정합니다.")
     @PatchMapping(value = "/{eventId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<EventResponse>> updateEvent(

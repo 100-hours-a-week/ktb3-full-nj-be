@@ -14,9 +14,12 @@ import com.example.dance_community.repository.PostLikeRepository;
 import com.example.dance_community.repository.PostRepository;
 import com.example.dance_community.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -69,6 +72,29 @@ public class PostService {
         return postRepository.findAll().stream()
                 .map(post -> {
                     // TODO: 게시글이 많으면 N+1 문제 발생 가능 (추후 QueryDSL 등으로 최적화 권장)
+                    boolean isLiked = userId != null
+                            && postLikeRepository.existsByPostPostIdAndUserUserId(post.getPostId(), userId);
+                    return PostResponse.from(post, isLiked);
+                })
+                .toList();
+    }
+    public List<PostResponse> getHotPosts(Long userId) {
+        LocalDateTime oneWeekAgo = LocalDateTime.now().minusDays(7);
+        Pageable limitTen = PageRequest.of(0, 10);
+
+        return postRepository.findHotPosts(oneWeekAgo, limitTen).stream()
+                .map(post -> {
+                    boolean isLiked = userId != null
+                            && postLikeRepository.existsByPostPostIdAndUserUserId(post.getPostId(), userId);
+                    return PostResponse.from(post, isLiked);
+                })
+                .toList();
+    }
+    public List<PostResponse> getMyClubPosts(Long userId) {
+        Pageable limitThree = PageRequest.of(0, 10);
+
+        return postRepository.findMyClubPosts(userId, limitThree).stream()
+                .map(post -> {
                     boolean isLiked = userId != null
                             && postLikeRepository.existsByPostPostIdAndUserUserId(post.getPostId(), userId);
                     return PostResponse.from(post, isLiked);

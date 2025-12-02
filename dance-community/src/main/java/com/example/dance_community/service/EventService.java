@@ -17,6 +17,8 @@ import com.example.dance_community.repository.EventRepository;
 import com.example.dance_community.repository.UserRepository;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -82,6 +84,16 @@ public class EventService {
                                     && eventLikeRepository.existsByEventEventIdAndUserUserId(event.getEventId(), userId);
                             return EventResponse.from(event, isLiked);
                         }).toList();
+    }
+    public List<EventResponse> getUpcomingEvents(Long userId) {
+        Pageable limitEight = PageRequest.of(0, 10);
+
+        return eventRepository.findUpcomingEvents(limitEight).stream()
+                .map(event -> {
+                    boolean isLiked = userId != null
+                            && eventLikeRepository.existsByEventEventIdAndUserUserId(event.getEventId(), userId);
+                    return EventResponse.from(event, isLiked);
+                }).toList();
     }
 
     @Transactional

@@ -79,6 +79,24 @@ public class PostController {
         return ResponseEntity.ok(new ApiResponse<>("게시글 전체 조회 성공", postResponses));
     }
 
+    @Operation(summary = "[Hot Groove] ", description = "최근 7일간 작성된 글 중 좋아요 순 상위 10개")
+    @GetMapping("/hot")
+    public ResponseEntity<ApiResponse<List<PostResponse>>> getHotPosts(
+            @AuthenticationPrincipal UserDetail userDetail
+    ) {
+        List<PostResponse> postResponses = postService.getHotPosts(userDetail.getUserId());
+        return ResponseEntity.ok(new ApiResponse<>("Hot Groove 조회 성공", postResponses));
+    }
+
+    @Operation(summary = "[My Club News]", description = "내가 가입한 클럽의 최신글 조회")
+    @GetMapping("/my-club")
+    public ResponseEntity<ApiResponse<List<PostResponse>>> getMyClubPosts(
+            @AuthenticationPrincipal UserDetail userDetail
+    ) {
+        List<PostResponse> postResponses = postService.getMyClubPosts(userDetail.getUserId());
+        return ResponseEntity.ok(new ApiResponse<>("My Club News 조회 성공", postResponses));
+    }
+
     @Operation(summary = "내 게시물 수정", description = "사용자의 게시물을 수정합니다.")
     @PatchMapping(value = "/{postId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<PostResponse>> updatePost(
