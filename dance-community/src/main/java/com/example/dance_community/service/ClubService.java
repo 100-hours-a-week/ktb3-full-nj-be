@@ -62,11 +62,18 @@ public class ClubService {
     public ClubResponse updateClub(Long userId, Long clubId, ClubUpdateRequest request) {
         clubAuthService.validateClubAuthority(userId, clubId);
         Club club = clubAuthService.findByClubId(clubId);
+        String currentClubImage = club.getClubImage();
+
+        if (request.getClubImage() != null) {
+            if (currentClubImage != null) {
+                fileStorageService.deleteFile(currentClubImage);
+            }
+        }
 
         club.updateClub(
                 request.getClubName(), request.getIntro(), request.getDescription(),
                 request.getLocationName(), request.getClubType(),
-                request.getClubImage(), request.getTags()
+                request.getClubImage() == null ? club.getClubImage() : request.getClubImage(), request.getTags()
         );
 
         return ClubResponse.from(clubRepository.save(club));
