@@ -28,17 +28,17 @@ public class ClubJoinService {
     // 일반 사용자용
     @Transactional
     public ClubJoinResponse applyToClub(Long userId, Long clubId) {
-        ClubJoin clubJoin = clubJoinRepository
+        ClubJoin existingJoin = clubJoinRepository
                 .findByUser_UserIdAndClub_ClubId(userId, clubId)
                 .orElse(null);
 
-        if (clubJoin != null) {
-            if (clubJoin.getStatus() == ClubJoinStatus.PENDING || clubJoin.getStatus() == ClubJoinStatus.ACTIVE) {
-                throw new ConflictException("이미 가입 신청한 클럽입니다.");
+        if (existingJoin != null) {
+            if (existingJoin.getStatus() == ClubJoinStatus.PENDING || existingJoin.getStatus() == ClubJoinStatus.ACTIVE) {
+                throw new ConflictException("이미 활동 중이거나 가입 신청한 클럽입니다.");
             }
-            clubJoin.changeStatus(ClubJoinStatus.PENDING);
-            clubJoin.changeRole(ClubRole.MEMBER);
-            return ClubJoinResponse.from(clubJoin);
+            existingJoin.changeStatus(ClubJoinStatus.PENDING);
+            existingJoin.changeRole(ClubRole.MEMBER);
+            return ClubJoinResponse.from(existingJoin);
         }
 
         User user = userRepository.findById(userId)
@@ -82,20 +82,19 @@ public class ClubJoinService {
     }
 
     public List<ClubJoinResponse> getMyClubs(Long userId) {
-        List<ClubJoin> clubJoins = clubJoinRepository.findByUser_UserIdAndStatusIn(userId, List.of(ClubJoinStatus.ACTIVE));
-        return clubJoins.stream().map(ClubJoinResponse::from).toList();
+        return clubJoinRepository.findMyClubJoins(userId, List.of(ClubJoinStatus.ACTIVE))
+                .stream().map(ClubJoinResponse::from).toList();
     }
 
     public List<ClubJoinResponse> getMyAllClubs(Long userId) {
-        List<ClubJoin> clubJoins = clubJoinRepository.findByUser_UserIdAndStatusIn(userId, List.of(ClubJoinStatus.ACTIVE, ClubJoinStatus.PENDING));
-        return clubJoins.stream().map(ClubJoinResponse::from).toList();
+        return clubJoinRepository.findMyClubJoins(userId, List.of(ClubJoinStatus.ACTIVE, ClubJoinStatus.PENDING))
+                .stream().map(ClubJoinResponse::from).toList();
     }
 
     // 클럽 관리자용
     @Transactional
     public void approveApplication(Long managerId, Long clubId, Long applicantId) {
         clubAuthService.validateClubAuthority(managerId, clubId);
-
         ClubJoin clubJoin = clubAuthService.findClubJoin(applicantId, clubId);
 
         if (clubJoin.getStatus() != ClubJoinStatus.PENDING) {
@@ -108,7 +107,6 @@ public class ClubJoinService {
     @Transactional
     public void rejectApplication(Long managerId, Long clubId, Long applicantId) {
         clubAuthService.validateClubAuthority(managerId, clubId);
-
         ClubJoin clubJoin = clubAuthService.findClubJoin(applicantId, clubId);
 
         if (clubJoin.getStatus() != ClubJoinStatus.PENDING) {
@@ -121,7 +119,6 @@ public class ClubJoinService {
     @Transactional
     public void kickMember(Long managerId, Long clubId, Long targetUserId) {
         clubAuthService.validateClubAuthority(managerId, clubId);
-
         ClubJoin clubJoin = clubAuthService.findClubJoin(targetUserId, clubId);
 
         if (clubJoin.getStatus() != ClubJoinStatus.ACTIVE) {
@@ -140,7 +137,6 @@ public class ClubJoinService {
     @Transactional
     public void changeMemberRole(Long managerId, Long clubId, Long targetUserId, ClubRole newRole) {
         clubAuthService.validateLeaderAuthority(managerId, clubId);
-
         ClubJoin clubJoin = clubAuthService.findClubJoin(targetUserId, clubId);
 
         if (clubJoin.getStatus() != ClubJoinStatus.ACTIVE) {
@@ -159,18 +155,14 @@ public class ClubJoinService {
     }
 
     public List<ClubJoinResponse> getActiveMembers(Long clubId) {
-        List<ClubJoin> clubJoins = clubJoinRepository.findByClub_ClubIdAndStatus(clubId, ClubJoinStatus.ACTIVE);
-        return clubJoins.stream().map(ClubJoinResponse::from).toList();
+        return clubJoinRepository.findClubMembers(clubId, ClubJoinStatus.ACTIVE)
+                .stream().map(ClubJoinResponse::from).toList();
     }
 
     public List<ClubJoinResponse> getPendingApplications(Long managerId, Long clubId) {
         clubAuthService.validateClubAuthority(managerId, clubId);
-        List<ClubJoin> pendingJoins = clubJoinRepository.findByClub_ClubIdAndStatus(clubId, ClubJoinStatus.PENDING);
-        return pendingJoins.stream().map(ClubJoinResponse::from).toList();
-    }
-
-    public boolean isClubJoin(Long userId, Long clubId) {
-        return clubJoinRepository.existsByUser_UserIdAndClub_ClubId(userId, clubId);
+        return clubJoinRepository.findClubMembers(clubId, ClubJoinStatus.PENDING)
+                .stream().map(ClubJoinResponse::from).toList();
     }
 
     @Transactional
