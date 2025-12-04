@@ -1,6 +1,7 @@
 package com.example.dance_community.service;
 
 import com.example.dance_community.config.FileProperties;
+import com.example.dance_community.entity.Post;
 import com.example.dance_community.enums.ImageType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -11,7 +12,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -74,5 +78,40 @@ public class FileStorageService {
     private String generateFileName(String originalFilename) {
         String uuid = UUID.randomUUID().toString();
         return uuid + "_" + originalFilename;
+    }
+
+    void processImageUpdate(Post post, List<String> newImages, List<String> keepImages) {
+        if (keepImages == null) {
+            if (newImages != null && !newImages.isEmpty()) {
+                List<String> currentImages = new ArrayList<>(post.getImages());
+                currentImages.addAll(newImages);
+                post.updateImages(currentImages);
+            }
+            return;
+        }
+
+        List<String> currentImages = post.getImages();
+        List<String> finalImages = new ArrayList<>();
+
+        if (keepImages.isEmpty()) {
+            for (String imagePath : currentImages) {
+                this.deleteFile(imagePath);
+            }
+        } else {
+            finalImages.addAll(keepImages);
+
+            List<String> imagesToDelete = currentImages.stream()
+                    .filter(img -> !keepImages.contains(img))
+                    .collect(Collectors.toList());
+
+            for (String imagePath : imagesToDelete) {
+                this.deleteFile(imagePath);
+            }
+        }
+
+        if (newImages != null && !newImages.isEmpty()) {
+            finalImages.addAll(newImages);
+        }
+        post.updateImages(finalImages);
     }
 }

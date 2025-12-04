@@ -2,6 +2,7 @@ package com.example.dance_community.service;
 
 import com.example.dance_community.entity.Club;
 import com.example.dance_community.entity.ClubJoin;
+import com.example.dance_community.enums.ClubJoinStatus;
 import com.example.dance_community.enums.ClubRole;
 import com.example.dance_community.exception.AuthException;
 import com.example.dance_community.exception.NotFoundException;
@@ -10,6 +11,8 @@ import com.example.dance_community.repository.ClubRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -42,5 +45,9 @@ public class ClubAuthService {
     public ClubJoin findClubJoin(Long userId, Long clubId) {
         return clubJoinRepository.findByUser_UserIdAndClub_ClubId(userId, clubId)
                 .orElseThrow(() -> new NotFoundException("가입 정보를 찾을 수 없습니다"));
+    }
+
+    public List<Long> findUserClubIds(Long userId) {
+        return clubJoinRepository.findClubIdsByUserIdAndStatus(userId, ClubJoinStatus.ACTIVE);
     }
 }

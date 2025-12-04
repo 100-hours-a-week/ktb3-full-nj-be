@@ -22,6 +22,20 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
     private final JPAQueryFactory queryFactory;
 
     @Override
+    public List<Post> findAllPosts(List<Long> myClubIds) {
+        return queryFactory
+                .selectFrom(post)
+                .join(post.author, user).fetchJoin()
+                .leftJoin(post.club, club).fetchJoin()
+                .where(
+                        post.isDeleted.isFalse(),
+                        accessiblePostCondition(myClubIds)
+                )
+                .orderBy(post.createdAt.desc())
+                .fetch();
+    }
+
+    @Override
     public List<Post> findHotPosts(List<Long> myClubIds, Pageable pageable) {
         LocalDateTime oneWeekAgo = LocalDateTime.now().minusDays(14);
         return queryFactory
