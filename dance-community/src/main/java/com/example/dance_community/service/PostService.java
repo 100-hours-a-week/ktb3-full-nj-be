@@ -6,22 +6,22 @@ import com.example.dance_community.dto.post.PostUpdateRequest;
 import com.example.dance_community.entity.Club;
 import com.example.dance_community.entity.Post;
 import com.example.dance_community.entity.User;
+import com.example.dance_community.enums.ClubJoinStatus;
 import com.example.dance_community.enums.Scope;
 import com.example.dance_community.exception.AccessDeniedException;
 import com.example.dance_community.exception.InvalidRequestException;
 import com.example.dance_community.exception.NotFoundException;
-import com.example.dance_community.repository.PostLikeRepository;
-import com.example.dance_community.repository.PostRepository;
-import com.example.dance_community.repository.UserRepository;
+import com.example.dance_community.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 public class PostService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private final ClubJoinRepository clubJoinRepository;
     private final PostLikeRepository postLikeRepository;
     private final ClubAuthService clubAuthService;
     private final FileStorageService fileStorageService;
@@ -68,6 +69,7 @@ public class PostService {
 
         return PostResponse.from(post, isLiked);
     }
+
     public List<PostResponse> getPosts(Long userId) {
         return postRepository.findAll().stream()
                 .map(post -> {
@@ -79,17 +81,32 @@ public class PostService {
                 .toList();
     }
     public List<PostResponse> getHotPosts(Long userId) {
-        LocalDateTime oneWeekAgo = LocalDateTime.now().minusDays(7);
-        Pageable limitTen = PageRequest.of(0, 10);
+        List<Long> myClubIds = userId != null
+                ? clubJoinRepository.findClubIdsByUserIdAndStatus(userId, ClubJoinStatus.ACTIVE) : new ArrayList<>();
 
-        return postRepository.findHotPosts(oneWeekAgo, limitTen).stream()
+        Pageable pageable = PageRequest.of(0, 10);
+        List<Post> posts = postRepository.findHotPosts(myClubIds, pageable);
+
+        if (posts.isEmpty()) {
+            return List.of();
+        }
+
+        Set<Long> likedPostIds = new HashSet<>();
+        if (userId != null) {
+            List<Long> postIds = posts.stream().map(Post::getPostId).toList();
+            likedPostIds = postLikeRepository.findLikedPostIds(postIds, userId);
+        }
+
+        Set<Long> finalLikedPostIds = likedPostIds;
+
+        return posts.stream()
                 .map(post -> {
-                    boolean isLiked = userId != null
-                            && postLikeRepository.existsByPostPostIdAndUserUserId(post.getPostId(), userId);
+                    boolean isLiked = finalLikedPostIds.contains(post.getPostId());
                     return PostResponse.from(post, isLiked);
                 })
                 .toList();
     }
+
     public List<PostResponse> getMyClubPosts(Long userId) {
         Pageable limitThree = PageRequest.of(0, 10);
 

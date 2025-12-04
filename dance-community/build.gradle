@@ -47,15 +47,18 @@ dependencies {
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.13'
     implementation 'org.apache.commons:commons-lang3:3.18.0'
 
-    // BCrypt 라이브러리
-    implementation 'org.mindrot:jbcrypt:0.4'
-
     // Validation Starter
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 
     // Spring Security 추가
     implementation 'org.springframework.boot:spring-boot-starter-security'
     testImplementation 'org.springframework.security:spring-security-test'
+
+    // QueryDSL 추가 (Spring Boot 3.x)
+    implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
+    annotationProcessor "com.querydsl:querydsl-apt:5.0.0:jakarta"
+    annotationProcessor "jakarta.annotation:jakarta.annotation-api"
+    annotationProcessor "jakarta.persistence:jakarta.persistence-api"
 }
 
 tasks.named('test') {

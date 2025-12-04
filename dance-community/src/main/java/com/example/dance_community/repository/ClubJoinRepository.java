@@ -16,6 +16,10 @@ public interface ClubJoinRepository extends JpaRepository<ClubJoin, Long> {
     List<ClubJoin> findByClub_ClubIdAndStatus(Long clubId, ClubJoinStatus status);
     List<ClubJoin> findByUser_UserIdAndStatusIn(Long userId, List<ClubJoinStatus> statuses);
     Optional<ClubJoin> findByUser_UserIdAndClub_ClubId(Long userId, Long clubId);
+
+    @Query("SELECT cj.club.clubId FROM ClubJoin cj WHERE cj.user.userId = :userId AND cj.status = :status")
+    List<Long> findClubIdsByUserIdAndStatus(@Param("userId") Long userId, @Param("status") ClubJoinStatus status);
+
     boolean existsByUser_UserIdAndClub_ClubId(Long userId, Long clubId);
 
     @Modifying()
