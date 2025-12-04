@@ -16,11 +16,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface EventJoinRepository extends JpaRepository<EventJoin, Long> {
-    List<EventJoin> findByEvent_EventIdAndStatus(Long eventId, EventJoinStatus status);
-
-    List<EventJoin> findByParticipant(User user);
-
+public interface EventJoinRepository extends JpaRepository<EventJoin, Long> , EventJoinRepositoryCustom {
     Optional<EventJoin> findByParticipant_UserIdAndEvent_EventId(Long userId, Long eventId);
 
     long countByEvent_EventIdAndStatus(Long eventId, EventJoinStatus status);

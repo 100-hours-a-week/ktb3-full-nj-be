@@ -20,20 +20,12 @@ import java.util.List;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class EventJoinService {
-    private final EventJoinRepository eventJoinRepository;
-    private final EventRepository eventRepository;
     private final UserRepository userRepository;
+    private final EventRepository eventRepository;
+    private final EventJoinRepository eventJoinRepository;
 
     @Transactional
     public EventJoinResponse applyEvent(Long userId, Long eventId) {
-        Event event = eventRepository.findWithLockByEventId(eventId)
-                .orElseThrow(() -> new NotFoundException("행사를 찾을 수 없습니다"));
-
-        long currentCount = eventJoinRepository.countByEvent_EventIdAndStatus(eventId, EventJoinStatus.CONFIRMED);
-        if (currentCount >= event.getCapacity()) {
-            throw new ConflictException("선착순 마감되었습니다.");
-        }
-
         EventJoin existingJoin = eventJoinRepository
                 .findByParticipant_UserIdAndEvent_EventId(userId, eventId)
                 .orElse(null);
@@ -42,6 +34,17 @@ public class EventJoinService {
             if (existingJoin.getStatus() == EventJoinStatus.CONFIRMED) {
                 throw new ConflictException("이미 신청이 완료된 행사입니다.");
             }
+        }
+
+        Event event = eventRepository.findWithLockByEventId(eventId)
+                .orElseThrow(() -> new NotFoundException("행사를 찾을 수 없습니다"));
+
+        long currentCount = eventJoinRepository.countByEvent_EventIdAndStatus(eventId, EventJoinStatus.CONFIRMED);
+        if (currentCount >= event.getCapacity()) {
+            throw new ConflictException("선착순 마감되었습니다.");
+        }
+
+        if (existingJoin != null) {
             existingJoin.changeStatus(EventJoinStatus.CONFIRMED);
             return EventJoinResponse.from(existingJoin);
         }
@@ -64,7 +67,7 @@ public class EventJoinService {
                 .orElseThrow(() -> new NotFoundException("신청 내역이 없습니다"));
 
         if (join.getStatus() != EventJoinStatus.CONFIRMED) {
-            throw new InvalidRequestException("취소할 수 없는 상태입니다 (이미 취소됨 등)");
+            throw new InvalidRequestException("취소할 수 없는 상태입니다");
         }
 
         join.changeStatus(EventJoinStatus.CANCELED);
@@ -90,24 +93,25 @@ public class EventJoinService {
     }
 
     public EventJoinResponse getJoinStatus(Long userId, Long eventId) {
-        EventJoin join = eventJoinRepository.findByParticipant_UserIdAndEvent_EventId(userId, eventId)
+        return eventJoinRepository.findByParticipant_UserIdAndEvent_EventId(userId, eventId)
+                .map(EventJoinResponse::from)
                 .orElseThrow(() -> new NotFoundException("신청 이력이 없습니다"));
-        return EventJoinResponse.from(join);
     }
-
     public List<EventJoinResponse> getUserEvents(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다"));
 
-        return eventJoinRepository.findByParticipant(user)
-                .stream().map(EventJoinResponse::from).toList();
+        return eventJoinRepository.findMyJoinedEvents(userId, EventJoinStatus.CONFIRMED)
+                .stream()
+                .map(EventJoinResponse::from)
+                .toList();
     }
-
     public List<EventJoinResponse> getEventUsers(Long eventId) {
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new NotFoundException("행사를 찾을 수 없습니다"));
+        if (!eventRepository.existsById(eventId)) {
+            throw new NotFoundException("행사를 찾을 수 없습니다");
+        }
 
-        return eventJoinRepository.findByEvent_EventIdAndStatus(eventId, EventJoinStatus.CONFIRMED)
+        return eventJoinRepository.findParticipantsWithUser(eventId, EventJoinStatus.CONFIRMED)
                 .stream().map(EventJoinResponse::from).toList();
     }
 
