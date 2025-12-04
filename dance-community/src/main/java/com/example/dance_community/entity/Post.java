@@ -16,7 +16,7 @@ import java.util.List;
 @Table(name = "posts")
 @SQLRestriction("is_deleted = false")
 @SQLDelete(sql = "UPDATE posts SET is_deleted = true WHERE post_id = ?")
-public class Post extends BaseEntity{
+public class Post extends BaseEntity implements ImageHolder{
 
     // 게시물 ID
     @Id
@@ -105,9 +105,6 @@ public class Post extends BaseEntity{
     }
     public void updateImages(List<String> images) {
         this.images = images;
-    }
-    public void incrementViewCount() {
-        this.viewCount++;
     }
     public void incrementLikeCount() {
         this.likeCount++;

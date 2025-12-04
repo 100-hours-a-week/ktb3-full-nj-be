@@ -2,6 +2,7 @@ package com.example.dance_community.service;
 
 import com.example.dance_community.config.FileProperties;
 import com.example.dance_community.entity.Event;
+import com.example.dance_community.entity.ImageHolder;
 import com.example.dance_community.entity.Post;
 import com.example.dance_community.enums.ImageType;
 import lombok.RequiredArgsConstructor;
@@ -81,17 +82,17 @@ public class FileStorageService {
         return uuid + "_" + originalFilename;
     }
 
-    void processImageUpdate(Post post, List<String> newImages, List<String> keepImages) {
+    void processImageUpdate(ImageHolder entity, List<String> newImages, List<String> keepImages) {
         if (keepImages == null) {
             if (newImages != null && !newImages.isEmpty()) {
-                List<String> currentImages = new ArrayList<>(post.getImages());
+                List<String> currentImages = new ArrayList<>(entity.getImages());
                 currentImages.addAll(newImages);
-                post.updateImages(currentImages);
+                entity.updateImages(currentImages);
             }
             return;
         }
 
-        List<String> currentImages = post.getImages();
+        List<String> currentImages = entity.getImages();
         List<String> finalImages = new ArrayList<>();
 
         if (keepImages.isEmpty()) {
@@ -113,41 +114,6 @@ public class FileStorageService {
         if (newImages != null && !newImages.isEmpty()) {
             finalImages.addAll(newImages);
         }
-        post.updateImages(finalImages);
-    }
-
-    void processImageUpdate(Event event, List<String> newImages, List<String> keepImages) {
-        if (keepImages == null) {
-            if (newImages != null && !newImages.isEmpty()) {
-                List<String> currentImages = new ArrayList<>(event.getImages());
-                currentImages.addAll(newImages);
-                event.updateImages(currentImages);
-            }
-            return;
-        }
-
-        List<String> currentImages = event.getImages();
-        List<String> finalImages = new ArrayList<>();
-
-        if (keepImages.isEmpty()) {
-            for (String imagePath : currentImages) {
-                this.deleteFile(imagePath);
-            }
-        } else {
-            finalImages.addAll(keepImages);
-
-            List<String> imagesToDelete = currentImages.stream()
-                    .filter(img -> !keepImages.contains(img))
-                    .collect(Collectors.toList());
-
-            for (String imagePath : imagesToDelete) {
-                this.deleteFile(imagePath);
-            }
-        }
-
-        if (newImages != null && !newImages.isEmpty()) {
-            finalImages.addAll(newImages);
-        }
-        event.updateImages(finalImages);
+        entity.updateImages(finalImages);
     }
 }

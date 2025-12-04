@@ -19,7 +19,7 @@ import java.util.List;
 @Table(name = "events")
 @SQLRestriction("is_deleted = false")
 @SQLDelete(sql = "UPDATE events SET is_deleted = true WHERE event_id = ?")
-public class Event extends BaseEntity{
+public class Event extends BaseEntity implements ImageHolder{
 
     // 행사 ID
     @Id
@@ -152,9 +152,6 @@ public class Event extends BaseEntity{
     }
     public void updateImages(List<String> images) {
         this.images = images;
-    }
-    public void incrementViewCount() {
-        this.viewCount++;
     }
     public void incrementLikeCount() {
         this.likeCount++;
