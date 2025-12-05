@@ -7,7 +7,10 @@ import lombok.*;
 
 @Entity
 @Getter
+@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
+
 @Table(
         name = "club_joins",
         uniqueConstraints = {
@@ -39,7 +42,6 @@ public class ClubJoin extends BaseEntity{
     private ClubJoinStatus status;
 
     // CREATE
-    @Builder
     private ClubJoin(User user, Club club, ClubRole role, ClubJoinStatus status) {
         validateClubJoin(user, club, role, status);
         this.user = user;

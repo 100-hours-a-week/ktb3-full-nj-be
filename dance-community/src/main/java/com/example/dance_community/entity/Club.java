@@ -14,7 +14,10 @@ import java.util.List;
 
 @Entity
 @Getter
+@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
+
 @Table(name = "clubs")
 @SQLRestriction("is_deleted = false")
 @SQLDelete(sql = "UPDATE clubs SET is_deleted = true WHERE club_id = ?")
@@ -47,22 +50,25 @@ public class Club extends BaseEntity{
             joinColumns = @JoinColumn(name = "clubId")
     )
     @Column(name = "tag")
+    @Builder.Default
     private List<String> tags = new ArrayList<>();
 
     @OneToMany(mappedBy = "club", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<ClubJoin> members = new ArrayList<>();
 
     @Formula("(SELECT count(*) FROM club_joins cj WHERE cj.club_id = club_id AND cj.status = 'ACTIVE')")
     private int memberCount;
 
     @OneToMany(mappedBy = "club", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<Post> posts = new ArrayList<>();
 
     @OneToMany(mappedBy = "club", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<Event> events = new ArrayList<>();
 
     // CREATE
-    @Builder
     public Club(String clubName, String intro, String description, String locationName, ClubType clubType, String clubImage, List<String> tags) {
         checkNullOrBlank(clubName, "클럽 이름");
         checkNullOrBlank(intro, "클럽 한 줄 소개");

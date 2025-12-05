@@ -1,7 +1,8 @@
-package com.example.dance_community.repository;
+package com.example.dance_community.repository.impl;
 
 import com.example.dance_community.entity.EventJoin;
 import com.example.dance_community.enums.EventJoinStatus;
+import com.example.dance_community.repository.custom.EventJoinRepositoryCustom;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 

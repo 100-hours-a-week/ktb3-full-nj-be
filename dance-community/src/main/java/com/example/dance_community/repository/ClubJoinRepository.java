@@ -2,6 +2,7 @@ package com.example.dance_community.repository;
 
 import com.example.dance_community.entity.ClubJoin;
 import com.example.dance_community.enums.ClubJoinStatus;
+import com.example.dance_community.repository.custom.ClubJoinRepositoryCustom;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

@@ -15,7 +15,10 @@ import java.util.List;
 
 @Entity
 @Getter
+@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
+
 @Table(name = "events")
 @SQLRestriction("is_deleted = false")
 @SQLDelete(sql = "UPDATE events SET is_deleted = true WHERE event_id = ?")
@@ -59,6 +62,7 @@ public class Event extends BaseEntity implements ImageHolder{
             joinColumns = @JoinColumn(name = "eventId")
     )
     @Column(name = "tag")
+    @Builder.Default
     private List<String> tags = new ArrayList<>();
 
     @ElementCollection
@@ -67,6 +71,7 @@ public class Event extends BaseEntity implements ImageHolder{
             joinColumns = @JoinColumn(name = "eventId")
     )
     @Column(name = "image")
+    @Builder.Default
     private List<String> images = new ArrayList<>();
 
     // 행사 장소 정보 (이름, 주소, 링크)
@@ -80,6 +85,7 @@ public class Event extends BaseEntity implements ImageHolder{
 
     // 행사 참가자 목록
     @OneToMany(mappedBy = "event")
+    @Builder.Default
     private List<EventJoin> participants = new ArrayList<>();
 
     @Formula("(SELECT count(*) FROM event_joins ej WHERE ej.event_id = event_id AND ej.status = 'CONFIRMED')")
@@ -98,10 +104,10 @@ public class Event extends BaseEntity implements ImageHolder{
     private Long viewCount;
 
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<EventLike> likes = new ArrayList<>();
 
     // CREATE
-    @Builder
     private Event(User host, Scope scope, Club club, EventType type,
                   String title, String content, List<String> tags, List<String> images,
                   String locationName, String locationAddress, String locationLink, Long capacity,

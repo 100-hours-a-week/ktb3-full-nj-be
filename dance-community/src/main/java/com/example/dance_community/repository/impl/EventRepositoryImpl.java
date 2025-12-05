@@ -1,7 +1,8 @@
-package com.example.dance_community.repository;
+package com.example.dance_community.repository.impl;
 
 import com.example.dance_community.entity.Event;
 import com.example.dance_community.enums.Scope;
+import com.example.dance_community.repository.custom.EventRepositoryCustom;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;

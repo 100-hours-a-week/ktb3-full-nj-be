@@ -3,6 +3,7 @@ plugins {
 	id 'org.springframework.boot' version '3.5.7'
 	id 'io.spring.dependency-management' version '1.1.7'
     id 'org.jetbrains.kotlin.jvm'
+    id 'jacoco'
 }
 
 group = 'com.example'
@@ -63,4 +64,40 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+test {
+    useJUnitPlatform()
+    jvmArgs("-XX:+EnableDynamicAgentLoading")
+    finalizedBy jacocoTestReport // 테스트 끝나면 리포트 생성
+}
+
+jacoco {
+    toolVersion = "0.8.11" // 자바 버전에 맞춰 최신 버전 사용
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        html.required = true // HTML 리포트 생성 (눈으로 보기 좋음)
+        xml.required = true
+    }
+    // 리포트에서 제외할 파일들 (Q클래스, DTO 등은 테스트 불필요)
+    def Qdomains = []
+    for (qPattern in "**/QA".."**/QZ") {
+        Qdomains.add(qPattern + "*")
+    }
+
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                    "**/dto/**",
+                    "**/entity/**",
+                    "**/config/**",
+                    "**/exception/**",
+                    "**/*Application*",
+                    "**/Q*" // Q클래스 제외
+            ] + Qdomains)
+        }))
+    }
 }

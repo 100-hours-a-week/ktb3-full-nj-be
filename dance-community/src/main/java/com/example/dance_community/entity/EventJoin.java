@@ -6,7 +6,10 @@ import lombok.*;
 
 @Entity
 @Getter
+@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
+
 @Table(
         name = "event_joins",
         uniqueConstraints = {
@@ -34,7 +37,6 @@ public class EventJoin extends BaseEntity{
     private EventJoinStatus status;
 
     // CREATE
-    @Builder
     private EventJoin(User participant, Event event, EventJoinStatus status) {
         validateEventJoin(participant, event, status);
         this.participant = participant;

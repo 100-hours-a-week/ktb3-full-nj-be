@@ -11,7 +11,10 @@ import java.util.List;
 
 @Entity
 @Getter
+@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
+
 @Table(name = "users")
 @SQLRestriction("is_deleted = false")
 @SQLDelete(sql = "UPDATE users SET is_deleted = true WHERE user_id = ?")
@@ -33,19 +36,22 @@ public class User extends BaseEntity{
     private String profileImage;
 
     @OneToMany(mappedBy = "user")
+    @Builder.Default
     private List<ClubJoin> clubs = new ArrayList<>();
 
     @OneToMany(mappedBy = "author")
+    @Builder.Default
     private List<Post> posts = new ArrayList<>();
 
     @OneToMany(mappedBy = "host")
+    @Builder.Default
     private List<Event> events = new ArrayList<>();
 
     @OneToMany(mappedBy = "participant")
+    @Builder.Default
     private List<EventJoin> eventJoins = new ArrayList<>();
 
     // CREATE
-    @Builder
     public User(String email, String password, String nickname, String profileImage) {
         checkNullOrBlank(email, "이메일");
         checkNullOrBlank(password, "비밀번호");

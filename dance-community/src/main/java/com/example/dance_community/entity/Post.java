@@ -6,13 +6,15 @@ import lombok.*;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Getter
+@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
+
 @Table(name = "posts")
 @SQLRestriction("is_deleted = false")
 @SQLDelete(sql = "UPDATE posts SET is_deleted = true WHERE post_id = ?")
@@ -51,6 +53,7 @@ public class Post extends BaseEntity implements ImageHolder{
             joinColumns = @JoinColumn(name = "postId")
     )
     @Column(name = "tag")
+    @Builder.Default
     private List<String> tags = new ArrayList<>();
 
     @ElementCollection
@@ -59,6 +62,7 @@ public class Post extends BaseEntity implements ImageHolder{
             joinColumns = @JoinColumn(name = "postId")
     )
     @Column(name = "image")
+    @Builder.Default
     private List<String> images = new ArrayList<>();
 
     @Column(nullable = false)
@@ -68,10 +72,10 @@ public class Post extends BaseEntity implements ImageHolder{
     private Long viewCount;
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<PostLike> likes = new ArrayList<>();
 
     // CREATE
-    @Builder
     private Post(User author, Scope scope, Club club,
                  String title, String content, List<String> tags, List<String> images) {
         validatePost(author, scope, club, title, content);

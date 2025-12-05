@@ -1,4 +1,4 @@
-package com.example.dance_community.repository;
+package com.example.dance_community.repository.custom;
 
 import com.example.dance_community.entity.Event;
 import org.springframework.data.domain.Pageable;
