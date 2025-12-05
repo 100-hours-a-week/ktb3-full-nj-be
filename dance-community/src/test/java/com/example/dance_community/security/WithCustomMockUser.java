@@ -11,5 +11,4 @@ public @interface WithCustomMockUser {
     long userId() default 1L;
     String email() default "test@email.com";
     String nickname() default "Tester";
-    String role() default "USER";
 }
