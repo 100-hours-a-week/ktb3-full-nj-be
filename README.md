@@ -11,6 +11,8 @@
 - **Gradle** (빌드 도구)
 
 ## 📂 ERD (Entity Relationship Diagram)
-![dance-community-v2 (1).png](../../../Downloads/dance-community-v2%20%281%29.png)
+<img width="2030" height="1412" alt="dance-community-v2 (1)" src="https://github.com/user-attachments/assets/5133e3dc-e4a3-489e-856c-1ab14d4947b9" />
+
 
 ## 🎥 시연 영상 시나리오
+[![C.Groove 시연 영상](https://img.youtube.com/vi/tm8GrfF0A9Y/0.jpg)](https://www.youtube.com/watch?v=tm8GrfF0A9Y)
