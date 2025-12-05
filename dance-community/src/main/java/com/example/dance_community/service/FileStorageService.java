@@ -60,18 +60,25 @@ public class FileStorageService {
     }
 
     public void deleteFile(String filePath) {
-        if (filePath == null) {
+        if (filePath == null || filePath.isBlank()) {
             return;
         }
 
         try {
-            String actualPath = filePath.startsWith("/") ? filePath.substring(1) : filePath;
-            Path path = Paths.get(actualPath);
+            Path path = Paths.get(filePath);
 
             if (Files.exists(path)) {
                 Files.delete(path);
-                System.out.println("파일 삭제 완료: " + filePath);
+                return;
             }
+
+            if (filePath.startsWith("/")) {
+                Path relativePath = Paths.get(filePath.substring(1));
+                if (Files.exists(relativePath)) {
+                    Files.delete(relativePath);
+                }
+            }
+
         } catch (IOException e) {
             System.err.println("파일 삭제 실패: " + filePath + " - " + e.getMessage());
         }

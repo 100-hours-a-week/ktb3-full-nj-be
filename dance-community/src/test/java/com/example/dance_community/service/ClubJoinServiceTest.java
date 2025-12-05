@@ -17,6 +17,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -106,6 +107,21 @@ class ClubJoinServiceTest {
     }
 
     @Test
+    @DisplayName("클럽 가입 신청 실패 - 이미 신청 대기 중(PENDING)")
+    void applyToClub_Fail_AlreadyPending() {
+        // given
+        Long userId = 1L;
+        Long clubId = 10L;
+        ClubJoin existingJoin = ClubJoin.builder().status(ClubJoinStatus.PENDING).build();
+
+        given(clubJoinRepository.findByUser_UserIdAndClub_ClubId(userId, clubId))
+                .willReturn(Optional.of(existingJoin));
+
+        // when & then
+        assertThrows(ConflictException.class, () -> clubJoinService.applyToClub(userId, clubId));
+    }
+
+    @Test
     @DisplayName("신청 취소 성공")
     void cancelApplication_Success() {
         // given
@@ -120,6 +136,24 @@ class ClubJoinServiceTest {
 
         // then
         assertThat(join.getStatus()).isEqualTo(ClubJoinStatus.CANCELED);
+    }
+
+    @Test
+    @DisplayName("클럽 탈퇴 성공")
+    void leaveClub_Success() {
+        // given
+        Long userId = 1L;
+        Long clubId = 10L;
+        // 일반 멤버는 탈퇴 가능
+        ClubJoin join = ClubJoin.builder().status(ClubJoinStatus.ACTIVE).role(ClubRole.MEMBER).build();
+
+        given(clubAuthService.findClubJoin(userId, clubId)).willReturn(join);
+
+        // when
+        clubJoinService.leaveClub(userId, clubId);
+
+        // then
+        assertThat(join.getStatus()).isEqualTo(ClubJoinStatus.LEFT);
     }
 
     @Test
@@ -156,6 +190,43 @@ class ClubJoinServiceTest {
 
         // then
         assertThat(applicantJoin.getStatus()).isEqualTo(ClubJoinStatus.ACTIVE);
+    }
+
+    @Test
+    @DisplayName("가입 거절 성공")
+    void rejectApplication_Success() {
+        // given
+        Long managerId = 1L;
+        Long clubId = 10L;
+        Long applicantId = 2L;
+        ClubJoin applicantJoin = ClubJoin.builder().status(ClubJoinStatus.PENDING).build();
+
+        doNothing().when(clubAuthService).validateClubAuthority(managerId, clubId);
+        given(clubAuthService.findClubJoin(applicantId, clubId)).willReturn(applicantJoin);
+
+        // when
+        clubJoinService.rejectApplication(managerId, clubId, applicantId);
+
+        // then
+        assertThat(applicantJoin.getStatus()).isEqualTo(ClubJoinStatus.REJECTED);
+    }
+
+    @Test
+    @DisplayName("가입 거절 실패 - 대기 상태가 아님")
+    void rejectApplication_Fail_NotPending() {
+        // given
+        Long managerId = 1L;
+        Long clubId = 10L;
+        Long applicantId = 2L;
+        // 이미 활동 중인 멤버를 거절하려고 함
+        ClubJoin applicantJoin = ClubJoin.builder().status(ClubJoinStatus.ACTIVE).build();
+
+        doNothing().when(clubAuthService).validateClubAuthority(managerId, clubId);
+        given(clubAuthService.findClubJoin(applicantId, clubId)).willReturn(applicantJoin);
+
+        // when & then
+        assertThrows(InvalidRequestException.class, () ->
+                clubJoinService.rejectApplication(managerId, clubId, applicantId));
     }
 
     @Test
@@ -213,5 +284,26 @@ class ClubJoinServiceTest {
 
         // then
         assertThat(targetJoin.getRole()).isEqualTo(ClubRole.MANAGER);
+    }
+
+    @Test
+    @DisplayName("내 클럽 목록 조회 성공")
+    void getMyClubs_Success() {
+        // given
+        Long userId = 1L;
+        User user = User.builder().userId(userId).build();
+        // QueryDSL Mocking: Club 정보가 채워진 Join 객체 리스트 반환
+        Club club = Club.builder().clubId(10L).clubName("Dance Team").build();
+        ClubJoin join = ClubJoin.builder().user(user).club(club).role(ClubRole.LEADER).status(ClubJoinStatus.ACTIVE).build();
+
+        given(clubJoinRepository.findMyClubJoins(userId, List.of(ClubJoinStatus.ACTIVE)))
+                .willReturn(List.of(join));
+
+        // when
+        var result = clubJoinService.getMyClubs(userId);
+
+        // then
+        assertThat(result).hasSize(1);
+        assertThat(result.getFirst().clubName()).isEqualTo("Dance Team");
     }
 }

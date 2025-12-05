@@ -4,7 +4,6 @@ import com.example.dance_community.entity.ClubJoin;
 import com.example.dance_community.enums.ClubRole;
 import com.example.dance_community.exception.AuthException;
 import com.example.dance_community.repository.ClubJoinRepository;
-import com.example.dance_community.repository.ClubRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,8 +23,6 @@ class ClubAuthServiceTest {
     @InjectMocks
     private ClubAuthService clubAuthService;
 
-    @Mock
-    private ClubRepository clubRepository;
     @Mock
     private ClubJoinRepository clubJoinRepository;
 
