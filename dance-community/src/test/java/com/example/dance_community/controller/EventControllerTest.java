@@ -89,7 +89,7 @@ class EventControllerTest {
                         .param("content", "Content")
                         .param("locationName", "Seoul")
                         .param("capacity", "50")
-                        .param("startsAt", LocalDateTime.now().toString()) // ISO 포맷
+                        .param("startsAt", LocalDateTime.now().toString())
                         .param("endsAt", LocalDateTime.now().plusHours(2).toString())
                         .with(csrf()))
                 .andExpect(status().isCreated())

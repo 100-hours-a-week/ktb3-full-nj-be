@@ -54,8 +54,8 @@ public class AuthController {
     @Operation(summary = "토큰 재발급", description = "토큰이 만료됐을 때 재발급합니다.")
     @PostMapping("/refresh")
     public ResponseEntity<ApiResponse<AuthResponse>> refresh(
-            @CookieValue(name = "refreshToken", required = false) String refreshToken)
-    {
+            @CookieValue(name = "refreshToken") String refreshToken
+    ) {
         AuthResponse authResponse = authService.refresh(refreshToken);
         return ResponseEntity.ok(new ApiResponse<>("토큰 재발급 성공", authResponse));
     }

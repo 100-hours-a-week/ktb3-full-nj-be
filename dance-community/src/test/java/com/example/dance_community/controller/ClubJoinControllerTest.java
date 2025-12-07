@@ -58,8 +58,6 @@ class ClubJoinControllerTest {
         );
     }
 
-    // --- 일반 유저 기능 ---
-
     @Test
     @DisplayName("클럽 가입 신청 성공")
     @WithCustomMockUser
@@ -91,8 +89,6 @@ class ClubJoinControllerTest {
         mockMvc.perform(get("/clubs/{clubId}/my-status", 10L))
                 .andExpect(status().isOk());
     }
-
-    // --- 관리자 기능 ---
 
     @Test
     @DisplayName("가입 신청 승인 성공")

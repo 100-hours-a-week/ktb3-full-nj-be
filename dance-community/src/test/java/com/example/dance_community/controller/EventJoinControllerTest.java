@@ -55,7 +55,6 @@ class EventJoinControllerTest {
         );
     }
 
-    // --- 1. 행사 신청 (POST) ---
     @Test
     @DisplayName("행사 신청 API 성공")
     @WithCustomMockUser(userId = 1L)
@@ -71,7 +70,6 @@ class EventJoinControllerTest {
                 .andExpect(jsonPath("$.data.status").value("CONFIRMED"));
     }
 
-    // --- 2. 행사 신청 취소 (DELETE) ---
     @Test
     @DisplayName("행사 신청 취소 API 성공")
     @WithCustomMockUser(userId = 1L)
@@ -84,7 +82,6 @@ class EventJoinControllerTest {
                 .andExpect(jsonPath("$.message").value("행사 신청 취소 성공"));
     }
 
-    // --- 3. 내 신청 상태 조회 (GET) ---
     @Test
     @DisplayName("내 신청 상태 조회 API 성공")
     @WithCustomMockUser(userId = 1L)
@@ -97,7 +94,6 @@ class EventJoinControllerTest {
                 .andExpect(jsonPath("$.data.status").value("CONFIRMED"));
     }
 
-    // --- 4. 내 신청 목록 조회 (GET) ---
     @Test
     @DisplayName("내 행사 신청 목록 조회 API 성공")
     @WithCustomMockUser(userId = 1L)
@@ -109,7 +105,6 @@ class EventJoinControllerTest {
                 .andExpect(jsonPath("$.data[0].eventJoinId").value(1L));
     }
 
-    // --- 5. 행사 참여자 목록 조회 (GET) ---
     @Test
     @DisplayName("행사 참여자 목록 조회 API 성공")
     @WithCustomMockUser(userId = 1L)
@@ -122,7 +117,6 @@ class EventJoinControllerTest {
                 .andExpect(jsonPath("$.data[0].nickname").value("Dancer"));
     }
 
-    // --- 6. 행사 신청 거절 (POST) ---
     @Test
     @DisplayName("행사 신청 거절 API 성공")
     @WithCustomMockUser(userId = 1L)

@@ -86,8 +86,7 @@ class UserControllerTest {
         UserResponse response = new UserResponse(1L, "email", nickname, "path/to/img.jpg", null);
         given(userService.updateUser(eq(1L), any(UserUpdateRequest.class))).willReturn(response);
 
-        // when & then (PATCH는 multipart 지원 안함 -> POST + _method=PATCH 혹은 MockMultipartHttpServletRequest 사용)
-        // Spring MockMvc에서는 multipart() 메서드로 PATCH를 흉내내려면 builder.with(request -> { request.setMethod("PATCH"); ... }) 써야 함
+        // when & then
         mockMvc.perform(multipart(HttpMethod.PATCH, "/users")
                         .file(image)
                         .param("nickname", nickname)
@@ -123,7 +122,7 @@ class UserControllerTest {
         // when & then
         mockMvc.perform(delete("/users")
                         .with(csrf()))
-                .andExpect(status().isNoContent()); // 204
+                .andExpect(status().isNoContent());
 
         verify(userService).deleteUser(1L);
     }

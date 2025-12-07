@@ -24,6 +24,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import static org.hamcrest.Matchers.containsString;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -64,7 +65,7 @@ class AuthControllerTest {
 
     @Test
     @DisplayName("회원가입 성공")
-    @WithMockUser // 인증 필요 없음
+    @WithMockUser
     void signup_Success() throws Exception {
         // given
         MockMultipartFile image = new MockMultipartFile("profileImage", "test.jpg", "image/jpeg", "content".getBytes());
@@ -89,6 +90,24 @@ class AuthControllerTest {
     }
 
     @Test
+    @DisplayName("회원가입 실패 - 이미 존재하는 이메일/닉네임 (Conflict)")
+    @WithMockUser
+    void signup_Fail_Conflict() throws Exception {
+        // given
+        given(authService.signup(any(SignupRequest.class)))
+                .willThrow(new com.example.dance_community.exception.ConflictException("이미 사용 중인 이메일입니다"));
+
+        // when & then
+        mockMvc.perform(multipart("/auth/signup")
+                        .param("email", "duplicate@test.com")
+                        .param("password", "pw")
+                        .param("nickname", "nick")
+                        .with(csrf()))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.detail").value("이미 사용 중인 이메일입니다"));
+    }
+
+    @Test
     @DisplayName("로그인 성공")
     @WithMockUser
     void login_Success() throws Exception {
@@ -108,6 +127,24 @@ class AuthControllerTest {
     }
 
     @Test
+    @DisplayName("로그인 실패 - 비밀번호 불일치 (Unauthorized)")
+    @WithMockUser
+    void login_Fail_Unauthorized() throws Exception {
+        // given
+        LoginRequest request = new LoginRequest("test@email.com", "wrong-pw");
+        given(authService.login(any(), any()))
+                .willThrow(new com.example.dance_community.exception.AuthException("비밀번호가 일치하지 않습니다"));
+
+        // when & then
+        mockMvc.perform(post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                        .with(csrf()))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.detail").value("비밀번호가 일치하지 않습니다"));
+    }
+
+    @Test
     @DisplayName("토큰 재발급 성공 - 쿠키값 읽기")
     @WithMockUser
     void refresh_Success() throws Exception {
@@ -119,10 +156,39 @@ class AuthControllerTest {
 
         // when & then
         mockMvc.perform(post("/auth/refresh")
-                        .cookie(new Cookie("refreshToken", refreshToken)) // 쿠키 설정
+                        .cookie(new Cookie("refreshToken", refreshToken))
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.accessToken").value("new-access-token"));
+    }
+
+    @Test
+    @DisplayName("토큰 재발급 실패 - 유효하지 않은 리프레시 토큰")
+    @WithMockUser
+    void refresh_Fail_InvalidToken() throws Exception {
+        // given
+        String invalidToken = "invalid-token";
+        given(authService.refresh(invalidToken))
+                .willThrow(new com.example.dance_community.exception.AuthException("유효하지 않은 refreshToken"));
+
+        // when & then
+        mockMvc.perform(post("/auth/refresh")
+                        .cookie(new Cookie("refreshToken", invalidToken))
+                        .with(csrf()))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.detail").value("유효하지 않은 refreshToken"));
+    }
+
+
+    @Test
+    @DisplayName("토큰 재발급 실패 - 쿠키 없음")
+    @WithMockUser
+    void refresh_Fail_NoCookie() throws Exception {
+        // when & then
+        mockMvc.perform(post("/auth/refresh")
+                        .with(csrf()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value(containsString("refreshToken")));
     }
 
     @Test
