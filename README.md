@@ -1,4 +1,4 @@
-# 🕺 C.Groove - Dance Community Platform
+# 🕺 C.Groove - Dance Community Platform (BE)
 
 > 대학씬 댄서들을 위한 커뮤니티 및 행사 관리 플랫폼
 
@@ -98,7 +98,7 @@
 
 ```
 # 1. 프로젝트 클론
-git clone [https://github.com/JINOJ37/dance-community.git](https://github.com/JINOJ37/dance-community.git)
+git clone [https://github.com/100-hours-a-week/ktb3-full-nj-be](https://github.com/100-hours-a-week/ktb3-full-nj-be)
 
   # 2. 빌드
 ./gradlew build
@@ -141,8 +141,6 @@ Email: jinoj0423@gmail.com
 
 <div align="center">
 
-**Made with ❤️ for Dancers**
-
-⭐ **이 프로젝트가 도움이 되셨다면 Star를 눌러주세요!**
+**Made with ❤️ for University Street Dancers**
 
 </div>
