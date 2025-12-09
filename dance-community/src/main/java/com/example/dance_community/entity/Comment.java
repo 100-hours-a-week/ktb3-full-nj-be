@@ -14,7 +14,7 @@ import org.hibernate.annotations.Where;
 
 @Table(name = "comments")
 @SQLRestriction("is_deleted = false")
-@SQLDelete(sql = "UPDATE posts SET is_deleted = true WHERE post_id = ?")
+@SQLDelete(sql = "UPDATE comments SET is_deleted = true WHERE comment_id = ?")
 public class Comment extends BaseEntity {
 
     // 댓글 ID
